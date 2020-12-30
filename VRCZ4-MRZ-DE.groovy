@@ -12,6 +12,9 @@
  *
  */
 
+import groovy.transform.Field
+import groovy.json.JsonOutput
+
  metadata {
 	// Automatically generated. Make future change here.
 	definition (name: "Z-Wave Scene To Button", namespace: "jarcher", author: "Jim Archer") {
@@ -32,6 +35,10 @@
 		status "button 3 pushed":  "command: 2B01, payload: 03 FF"
 		status "button 4 pushed":  "command: 2B01, payload: 04 FF"
         status "button released":  "command: 2C02, payload: 00"
+	}
+
+preferences {
+  	input "forceupdate", "bool", title: "Force Settings Update/Refresh?", description: "Toggle to force settings update", required: false
 	}
 
 	tiles {
@@ -244,6 +251,21 @@ def configure()
 	def cmd = configurationCmds()
     log.debug("Sending configuration: ${cmd}")
     return cmd
+}
+
+def initialize() {
+	sendEvent(name: "numberOfButtons", value: 4, displayed: false)
+    sendEvent(name: "button", value: "pushed", data: [buttonNumber: 1], displayed: false)
+    sendEvent(name: "supportedButtonValues", value:JsonOutput.toJson(["pushed","held"]), displayed:false)     
+}
+
+def updated() {
+	log.debug "$device.displayName updated()"
+    
+    sendEvent(name: "supportedButtonValues", value:JsonOutput.toJson(["pushed","held"]), displayed:false)
+    sendEvent(name: "numberOfButtons", value: 4, displayed: false)
+    
+    configure()
 }
 
 // Associate a load with the button, or clear the association if node id = 0
